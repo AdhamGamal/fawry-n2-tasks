@@ -15,18 +15,34 @@ grep_command="grep "
 query=""
 file=""
 
+add_n_flag=false
+add_v_flag=false
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -n)
+            if [[ "$add_n_flag" == true ]]; then
+                error_exit "Repeated option '-n'"
+            fi
             grep_command+=" -n"
+            add_n_flag=true
             shift
             ;;
         -v)
+            if [[ "$add_v_flag" == true ]]; then
+                error_exit "Repeated option '-v'"
+            fi
             grep_command+=" -v"
+            add_v_flag=true
             shift
             ;;
         -nv|-vn)
+            if [[ "$add_n_flag" == true || "$add_v_flag" == true ]]; then
+                error_exit "Repeated option '-n' or '-v' (combined '-nv' or '-vn')"
+            fi
             grep_command+=" -n -v"
+            add_n_flag=true
+            add_v_flag=true
             shift
             ;;
         -*)
