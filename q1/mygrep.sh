@@ -14,6 +14,7 @@ show_help() {
     echo "  -n          Show line numbers"
     echo "  -v          Show lines that DON'T contain the query"
     echo "  -h,--help   Show this help message"
+    exit 0
 }
 
 # Main script
@@ -23,42 +24,48 @@ file=""
 show_line_number=false
 show_invalid_match=false
 
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -n)
-            [[ "$show_line_number" == true ]] && error_exit "Repeated option '-n'"
-            show_line_number=true
-            shift
-            ;;
-        -v)
-            [[ "$show_invalid_match" == true ]] && error_exit "Repeated option '-v'"
-            show_invalid_match=true
-            shift
-            ;;
-        -nv|-vn)
-            [[ "$show_line_number" == true || "$show_invalid_match" == true ]] && error_exit "Repeated option in '-nv'"
-            show_line_number=true
-            show_invalid_match=true
-            shift
-            ;;
-        -h|--help)
-            show_help
-            exit 0
-            ;;
-        -*)
-            error_exit "Invalid option: $1"
-            ;;
-        *)
-            if [[ -z "$query" && ! -e "$1" ]]; then
-                query="$1"
-            elif [[ -z "$file" && -e "$1" ]]; then
-                file="$1"
-            else
-                error_exit "Unexpected argument '$1'"
+# Check if --help is in any position of the arguments
+for arg in "$@"; do
+    if [[ "$arg" == "--help" ]]; then
+        show_help
+    fi
+done
+
+while getopts ":nvh" opt; do
+    case "$opt" in
+        n)
+            if [[ "$show_line_number" == true ]]; then
+                error_exit "Repeated option '-n'"
             fi
-            shift
+            show_line_number=true
+            ;;
+        v)
+            if [[ "$show_invalid_match" == true ]]; then
+                error_exit "Repeated option '-v'"
+            fi
+            show_invalid_match=true
+            ;;
+        h)
+            show_help
+            ;;
+        \?)
+            error_exit "Invalid option: -$OPTARG"
             ;;
     esac
+done
+
+# Shift off processed options
+shift $((OPTIND - 1))
+
+# Loop to set query and file based on arguments
+for arg in "$@"; do
+    if [[ -z "$query" && ! -e "$arg" ]]; then
+        query="$arg"
+    elif [[ -z "$file" && -e "$arg" ]]; then
+        file="$arg"
+    else
+        error_exit "Unexpected argument '$arg'"
+    fi
 done
 
 # Final validations
