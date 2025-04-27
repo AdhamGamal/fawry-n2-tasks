@@ -11,38 +11,28 @@ usage() {
 }
 
 # Main script
-grep_command="grep "
 query=""
 file=""
 
-add_n_flag=false
-add_v_flag=false
+show_line_number=false
+show_invalid_match=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -n)
-            if [[ "$add_n_flag" == true ]]; then
-                error_exit "Repeated option '-n'"
-            fi
-            grep_command+=" -n"
-            add_n_flag=true
+            [[ "$show_line_number" == true ]] && error_exit "Repeated option '-n'"
+            show_line_number=true
             shift
             ;;
         -v)
-            if [[ "$add_v_flag" == true ]]; then
-                error_exit "Repeated option '-v'"
-            fi
-            grep_command+=" -v"
-            add_v_flag=true
+            [[ "$show_invalid_match" == true ]] && error_exit "Repeated option '-v'"
+            show_invalid_match=true
             shift
             ;;
         -nv|-vn)
-            if [[ "$add_n_flag" == true || "$add_v_flag" == true ]]; then
-                error_exit "Repeated option '-n' or '-v' (combined '-nv' or '-vn')"
-            fi
-            grep_command+=" -n -v"
-            add_n_flag=true
-            add_v_flag=true
+            [[ "$show_line_number" == true || "$show_invalid_match" == true ]] && error_exit "Repeated option in '-nv'"
+            show_line_number=true
+            show_invalid_match=true
             shift
             ;;
         -*)
@@ -66,5 +56,22 @@ done
 [[ -z "$file" ]] && error_exit "Missing file"
 [[ ! -r "$file" ]] && error_exit "No read permission for '$file'"
 
-# Execute grep command
-$grep_command "$query" "$file"
+# Execute grep
+# Read the file line by line
+line_number=1
+while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" == *"$query"* && "$show_invalid_match" == false ]]; then
+        if [[ "$show_line_number" == true ]]; then
+            echo "$line_number:$line"
+        else
+            echo "$line"
+        fi
+    elif [[ "$line" != *"$query"* && "$show_invalid_match" == true ]]; then
+        if [[ "$show_line_number" == true ]]; then
+            echo "$line_number:$line"
+        else
+            echo "$line"
+        fi
+    fi
+    ((line_number++))
+done < "$file"
