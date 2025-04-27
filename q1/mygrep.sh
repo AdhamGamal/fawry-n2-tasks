@@ -46,7 +46,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -*)
-            error_exit "Invalid option: $1" >&2
+            error_exit "Invalid option: $1"
             ;;
         *)
             if [[ -z "$query" && ! -e "$1" ]]; then
