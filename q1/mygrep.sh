@@ -78,14 +78,14 @@ done
 line_number=1
 found_match=false
 while IFS= read -r line || [[ -n "$line" ]]; do
-    if [[ "$line" == *"$query"* && "$show_invalid_match" == false ]]; then
+    if [[ "${line,,}" == *"${query,,}"* && "$show_invalid_match" == false ]]; then
         if [[ "$show_line_number" == true ]]; then
             echo "$line_number:$line"
         else
             echo "$line"
         fi
         found_match=true
-    elif [[ "$line" != *"$query"* && "$show_invalid_match" == true ]]; then
+    elif [[ "${line,,}" != *"${query,,}"* && "$show_invalid_match" == true ]]; then
         if [[ "$show_line_number" == true ]]; then
             echo "$line_number:$line"
         else
