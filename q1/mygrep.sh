@@ -77,15 +77,19 @@ done
 # Read the file line by line
 line_number=1
 found_match=false
+query_lower="${query,,}"
 while IFS= read -r line || [[ -n "$line" ]]; do
-    if [[ "${line,,}" == *"${query,,}"* && "$show_invalid_match" == false ]]; then
+    line_lower="${line,,}"
+
+    if [[ "$line_lower" == *"$query_lower"* && "$show_invalid_match" == false ]]; then
+        # Matching line
         if [[ "$show_line_number" == true ]]; then
             echo "$line_number:$line"
         else
             echo "$line"
         fi
         found_match=true
-    elif [[ "${line,,}" != *"${query,,}"* && "$show_invalid_match" == true ]]; then
+    elif [[ "$line_lower" != *"$query_lower"* && "$show_invalid_match" == true ]]; then
         if [[ "$show_line_number" == true ]]; then
             echo "$line_number:$line"
         else
