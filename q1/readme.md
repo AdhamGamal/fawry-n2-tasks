@@ -63,48 +63,45 @@ Below are my detailed reflections and answers based on the work:
 ## 1. **Argument and Option Handling Breakdown**
 
 - **Manual `--help` Check**:  
-  Before any other processing, the script scans all arguments for a `--help` flag. If found, it immediately prints usage information, offering user guidance without proceeding further.
+  Before any other processing, the script scans through all arguments to check if the `--help` option is present, providing early assistance for the user if requested.
   
 - **`getopts` Parsing**:  
-  The script uses `getopts` to handle short options like `-n`, `-v`, or `-h`. This allows flexible option management and robust error handling, while ensuring that options can be combined in any order.
+  The script then uses `getopts` to handle short options such as `-n`, `-v`, `-h`, allowing for simple and clear error handling for invalid options and managing duplicates.
 
 - **Shifting and Assigning Arguments**:  
-  After parsing options, the script uses `shift` to move past them, isolating positional arguments. The first remaining argument becomes the **search query**, and the next is the **file** to search in.
+  Once options are processed, the script shifts the arguments (removes the parsed ones) to access remaining positional arguments. The first argument that isn't a valid option or flag is assigned as the search query, and the first valid file is assigned as the file to search in.
 
 - **Critical Validations**:  
-  The script validates that:
-  - A search query is provided.
-  - A valid, readable file is specified.
+  Finally, the script ensures that all required inputs are valid:
+  - The query must not be missing.
+  - The specified file must exist and be accessible with the necessary permissions.
   - Errors are handled gracefully with clear error messages.
 
 ---
 
 ## 2. **Supporting Additional Features (Regex, `-i`, `-c`, `-l` options)**
 
-- **Option Expansion**:  
-  To support more features, I would expand the `getopts` string (e.g., `getopts ":nvicl"` for new flags) and add conditional logic based on the newly parsed options.
+- **Expanding Option Parsing**:  
+  To add more features like case-insensitive search (`-i`), match count (`-c`), or filename-only output (`-l`), the `getopts` string would be expanded to include these new options. Each option would require associated logic in the script to handle the behavior it represents.
 
-- **Regex Matching**:  
-  I would replace the simple string matching with Bash's `[[ $line =~ $pattern ]]` syntax, enabling full regular expression support.
+- **Regex Support**:  
+  For regular expression matching, the script would use Bash's `=~` operator instead of simple wildcard matching. This allows for more advanced and flexible pattern matching.
 
 - **Filename-Only Output (`-l`)**:  
-  Instead of printing matching lines, if `-l` is set, the script would detect the first match in a file and simply print the filename.
+  If the `-l` flag is set, the script should store filenames in an array and iterate over them, checking each for matches. Once a match is found in a file, the script should display the filename and stop further unnecessary processing for that file to save time and resources.
 
 - **Case-Insensitive Search (`-i`)**:  
-  With `-i`, matching would need to normalize both the line and search string to lowercase before comparison, or leverage `grep -i` or case-insensitive regex matching.
-
-- **Match Count (`-c`)**:  
-  I would introduce a counter variable that increments with every match found, and print the final count instead of matching lines if `-c` is used.
+  When the `-i` flag is enabled, the script should stop converting variables to lowercase and instead rely on the system's case-insensitive matching.
 
 ---
 
 ## 3. **Hardest Part to Implement**
 
 - **Positional Argument Parsing**:  
-  Correctly distinguishing between options and actual arguments (the search string and filename) was the most challenging. Bash doesn't automatically separate them cleanly after options parsing, so a careful manual check was necessary.
+  The most difficult aspect was accurately determining which argument was the query and which was the file. Since there may be multiple arguments, correctly distinguishing between them required careful validation and logic to handle various edge cases, such as missing queries or ambiguous arguments.
 
 - **File Validation**:  
-  Ensuring the specified file exists and is readable (and handling all possible permission errors properly) added complexity. Proper checks were vital to prevent runtime errors or misleading output.
+  Ensuring that the file exists and is readable (with proper permissions) was essential for preventing errors when searching through files.
 
 ---
 
